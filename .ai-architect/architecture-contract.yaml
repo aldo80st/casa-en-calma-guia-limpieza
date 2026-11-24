@@ -1,0 +1,155 @@
+schema_version: 1.0.0
+revision: 1
+scope: casa-en-calma-2-0
+architecture_style: static-web-modular-native-javascript
+quality_attributes:
+- name: decision-integrity
+  priority: 1
+  rationale: Evitar compras incompatibles o con evidencia inventada.
+  measurable_signal: Filtros obligatorios, IDs únicos y fuente o desconocido por dato material.
+- name: mobile-usability
+  priority: 2
+  rationale: El recorrido principal debe ser breve y accesible.
+  measurable_signal: Pruebas de navegación, teclado y sin desbordamiento a 320, 390 y 1440 px.
+- name: privacy-and-continuity
+  priority: 3
+  rationale: Mantener el sitio desacoplado y minimizar datos personales.
+  measurable_signal: Sin cuentas ni telemetría de preferencias; prueba de publicación y rollback.
+components:
+- id: views
+  responsibility: Presentación, navegación y accesibilidad
+  owns_data: []
+  public_interfaces:
+  - render-view
+- id: catalog
+  responsibility: Catálogo validado y evidencia versionada
+  owns_data:
+  - products
+  - commercial-evidence
+  public_interfaces:
+  - get-catalog
+- id: recommendation
+  responsibility: Filtrar y puntuar alternativas explicables
+  owns_data: []
+  public_interfaces:
+  - recommend-products
+- id: cost-model
+  responsibility: Calcular costo total con supuestos editables
+  owns_data: []
+  public_interfaces:
+  - estimate-cost
+- id: local-state
+  responsibility: Persistir preferencias y selección mediante IDs
+  owns_data:
+  - favorites
+  - comparison
+  - preferences
+  public_interfaces:
+  - read-write-local-state
+- id: research
+  responsibility: Preparar candidatos de datos con fuentes y revisión
+  owns_data:
+  - research-evidence
+  public_interfaces:
+  - propose-catalog-update
+- id: release
+  responsibility: Validar y promover versiones estáticas
+  owns_data:
+  - release-evidence
+  public_interfaces:
+  - publish-approved-version
+external_boundaries:
+- id: commercial-sources
+  responsibility: Publicaciones y reseñas externas; no disponibilidad garantizada
+- id: anima
+  responsibility: Coordinación de investigación y validación fuera del sitio público
+- id: github-pages
+  responsibility: Alojamiento estático HTTPS
+dependency_rules:
+- source: views
+  target: catalog
+  policy: allow-via-interface
+  via_interface: get-catalog
+  rationale: Leer catálogo sin modificarlo.
+- source: views
+  target: recommendation
+  policy: allow-via-interface
+  via_interface: recommend-products
+  rationale: Ejecutar evaluación mediante interfaz estable.
+- source: views
+  target: cost-model
+  policy: allow-via-interface
+  via_interface: estimate-cost
+  rationale: Simular costos.
+- source: views
+  target: local-state
+  policy: allow-via-interface
+  via_interface: read-write-local-state
+  rationale: Guardar selección solo localmente.
+- source: recommendation
+  target: catalog
+  policy: allow-via-interface
+  via_interface: get-catalog
+  rationale: Consumir datos validados.
+- source: recommendation
+  target: cost-model
+  policy: allow-via-interface
+  via_interface: estimate-cost
+  rationale: Reutilizar cálculo común.
+- source: research
+  target: commercial-sources
+  policy: allow
+  rationale: Consultar evidencia comercial legítima.
+- source: research
+  target: anima
+  policy: allow
+  rationale: Coordinar investigación fuera del cliente.
+- source: research
+  target: catalog
+  policy: allow-via-interface
+  via_interface: get-catalog
+  rationale: Proponer cambios sujetos a revisión.
+- source: release
+  target: github-pages
+  policy: allow
+  rationale: Publicar versión aprobada.
+- source: views
+  target: anima
+  policy: deny
+  rationale: Sitio independiente de infraestructura interna.
+- source: recommendation
+  target: commercial-sources
+  policy: deny
+  rationale: Sin dependencia de fuentes en tiempo real.
+required_practices:
+- IDs de producto estables; datos faltantes explícitos; fuente, fecha y variante por evidencia.
+- Filtrar compatibilidad, presupuesto, seguridad y stock; incertidumbre separada de puntuación.
+- Validar datos, reglas, accesibilidad, móvil, privacidad y publicar con evidencia y reversión.
+prohibited_practices:
+- Backend dedicado, cuentas, pagos, chatbot generativo integrado y recopilación de preferencias.
+- Inventar reseñas o precios, mezclar variantes sin aviso, tratar stock desconocido como confirmado.
+- Cambiar aplicación pública sin gates; incorporar dependencias complejas sin decisión aprobada.
+decision_ids:
+- ADR-001
+- ADR-002
+- ADR-003
+- ADR-004
+- ADR-005
+- ADR-006
+- ADR-007
+- ADR-008
+- ADR-009
+- ADR-010
+- ADR-011
+- ADR-012
+unresolved_questions:
+- id: Q-001
+  question: ¿Qué accesos de Paseo, Umbral y revisores independientes están operativos?
+  decision_impact: S0 debe verificarlos antes de declarar delegación o conformidad.
+  critical: false
+  answer: null
+- id: Q-002
+  question: ¿Qué fuentes permiten verificar garantía, refacciones y disponibilidad por SKU?
+  decision_impact: S2 debe registrar fuentes y ausencias; no inventar datos.
+  critical: false
+  answer: null
